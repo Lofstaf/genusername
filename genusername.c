@@ -20,8 +20,7 @@ struct User {
 	char *userName;
 };
 
-int createUserName(char *fullName);
-char* createUserName2(const char *fullName);
+char* createUserName(const char *fullName);
 
 int main(int argc, char *argv[]) {
 	struct User *users = NULL;
@@ -47,15 +46,19 @@ int main(int argc, char *argv[]) {
 		struct User *newUsers = realloc(users, (counter + 1) * sizeof(struct User));
 		if (newUsers == NULL) {
 			printf("Memory allocation error!\n");
+			for (int i = 0; i < counter; i++) {
+            	free(users[i].fullName);
+				free(users[i].userName);
+			}
 			free(users);
 			fclose(filePointer);
 			return -1;
 		}
 		users = newUsers;
-		users[counter].id = counter + 1; // Vill inte att id börjar på 0.
+		users[counter].id = counter + 1; // Don't want id to start at 0.
 		users[counter].fullName = strdup(lineBuffer);
-		users[counter].userName = strdup(createUserName2(lineBuffer));
-		
+		users[counter].userName = createUserName(lineBuffer);
+
 		counter++;
 	}
 	fclose(filePointer);
@@ -63,11 +66,11 @@ int main(int argc, char *argv[]) {
 
 	for (i = 0; i < counter; i++) {
 		printf("\"%s\",%s\n", users[i].fullName, users[i].userName);
-		i++;
 	}
 
 	for (i = 0; i < counter; i++) {
 		free(users[i].fullName);
+		free(users[i].userName);
 	}
 	free(users);
 	users = NULL;
@@ -75,6 +78,53 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+char* createUserName(const char *fullName) {
+    if (fullName == NULL) {
+        return NULL;  // Safety: avoid null strings.
+    }
+
+    int nameLength = strlen(fullName);
+    if (nameLength < 2) {
+        return NULL;  // Safety: name must be at least two letters.
+    }
+
+    // Dynamically allocate userName
+    char *userName = malloc(8);
+    if (!userName) {
+        return NULL;  // If malloc failes
+    }
+
+    // Temporary copy to convert to lower case,
+    char tempName[nameLength + 1];
+    strcpy(tempName, fullName);
+
+    // Conver to lower case.
+    for (int i = 0; i < nameLength; i++) {
+        tempName[i] = tolower(tempName[i]);
+    }
+
+    // Create user name based on first two letters
+    userName[0] = tempName[0];
+    userName[1] = tempName[1];
+
+    // Find spaces
+    char *ptr = strchr(tempName, ' ');
+    if (ptr != NULL && strlen(ptr) > 2) {
+        userName[2] = ptr[1];
+        userName[3] = ptr[2];
+    } else {
+        userName[2] = 'x';  // In case of no last name
+        userName[3] = 'x';
+    }
+
+    userName[4] = '0';
+    userName[5] = '0';
+    userName[6] = '\0';  // Null terminate string
+
+    return userName;  // Return pointer to user name
+}
+
+/*
 int createUserName(char *fullName) {
 	int nameLength = strlen(fullName);
 	char userName[8];
@@ -98,55 +148,7 @@ int createUserName(char *fullName) {
 	printf("%s, ", userName);
 	return 0;
 }
-
-
-char* createUserName2(const char *fullName) {
-    if (fullName == NULL) {
-        return NULL;  // Säkerhet: undvik att arbeta med NULL-strängar
-    }
-
-    int nameLength = strlen(fullName);
-    if (nameLength < 2) {
-        return NULL;  // Säkerhet: namn måste vara minst två bokstäver
-    }
-
-    // Dynamiskt allokera användarnamn
-    char *userName = malloc(8);
-    if (!userName) {
-        return NULL;  // Om malloc misslyckas
-    }
-
-    // Skapa en lokal kopia av namnet för att omvandla det till lowercase
-    char tempName[nameLength + 1];
-    strcpy(tempName, fullName);
-
-    // Omvandla till små bokstäver
-    for (int i = 0; i < nameLength; i++) {
-        tempName[i] = tolower(tempName[i]);
-    }
-
-    // Skapa användarnamn baserat på första två bokstäverna
-    userName[0] = tempName[0];
-    userName[1] = tempName[1];
-
-    // Hitta mellanslag
-    char *ptr = strchr(tempName, ' ');
-    if (ptr != NULL && strlen(ptr) > 2) {
-        userName[2] = ptr[1];
-        userName[3] = ptr[2];
-    } else {
-        userName[2] = 'x';  // Reservbokstav om inget efternamn finns
-        userName[3] = 'x';
-    }
-
-    userName[4] = '0';
-    userName[5] = '0';
-    userName[6] = '\0';  // Null-terminera strängen
-
-    return userName;  // Returnera pekaren till användarnamnet
-}
-
-
+*/
 
 
 
